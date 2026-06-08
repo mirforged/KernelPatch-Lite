@@ -148,21 +148,8 @@ void print_preset_info(preset_t *preset)
     fprintf(stdout, "version=0x%x\n", ver_num);
     fprintf(stdout, "compile_time=%s\n", header->compile_time);
     fprintf(stdout, "config=%s,%s\n", is_android ? "android" : "linux", is_debug ? "debug" : "release");
-    fprintf(stdout, "superkey=%s\n", setup->superkey);
-
-    // todo: remove compat version
-    if (ver_num > 0xa04) {
-        char *hexstr = bytes_to_hexstr(setup->root_superkey, ROOT_SUPER_KEY_HASH_LEN);
-        fprintf(stdout, "root_superkey=%s\n", hexstr);
-        free(hexstr);
-    }
-
     fprintf(stdout, INFO_ADDITIONAL_SESSION "\n");
     char *addition = setup->additional;
-    // todo: remove compat version
-    if (ver_num <= 0xa04) {
-        addition -= (ROOT_SUPER_KEY_HASH_LEN + SETUP_PRESERVE_LEN);
-    }
     char *pos = addition;
     while (pos < addition + ADDITIONAL_LEN) {
         int len = *pos;
@@ -400,14 +387,13 @@ static int disable_pi_map(char *img, size_t imglen)
     );
 }
 
-int patch_update_img(const char *kimg_path, const char *kpimg_path, const char *out_path, const char *superkey,
-                     bool root_key, const char **additional, extra_config_t *extra_configs, int extra_config_num)
+int patch_update_img(const char *kimg_path, const char *kpimg_path, const char *out_path,
+                     const char **additional, extra_config_t *extra_configs, int extra_config_num)
 {
     set_log_enable(true);
 
     if (!kpimg_path) tools_loge_exit("empty kpimg\n");
     if (!out_path) tools_loge_exit("empty out image path\n");
-    if (!superkey && !root_key) tools_loge_exit("empty superkey\n");
 
     patched_kimg_t pimg = { 0 };
     kernel_file_t kernel_file;
@@ -638,26 +624,6 @@ int patch_update_img(const char *kimg_path, const char *kpimg_path, const char *
     // start symbol
     fillin_patch_config(&kallsym, kallsym_kimg, ori_kimg_len, &setup->patch_config, kinfo->is_be, 0);
 
-    // superkey
-    if (!root_key) {
-        tools_logi("superkey: %s\n", superkey);
-        strncpy((char *)setup->superkey, superkey, SUPER_KEY_LEN - 1);
-    } else if (superkey && superkey[0] != '\0') {
-        int len = SHA256_BLOCK_SIZE > ROOT_SUPER_KEY_HASH_LEN ? ROOT_SUPER_KEY_HASH_LEN : SHA256_BLOCK_SIZE;
-        BYTE buf[SHA256_BLOCK_SIZE];
-        SHA256_CTX ctx;
-        sha256_init(&ctx);
-        sha256_update(&ctx, (const BYTE *)superkey, strnlen(superkey, SUPER_KEY_LEN));
-        sha256_final(&ctx, buf);
-        memcpy(setup->root_superkey, buf, len);
-        char *hexstr = bytes_to_hexstr(setup->root_superkey, len);
-        tools_logi("root superkey hash: %s\n", hexstr);
-        free(hexstr);
-    } else {
-        memset(setup->root_superkey, 0, ROOT_SUPER_KEY_HASH_LEN);
-        tools_logi("root_key mode with empty superkey: root_superkey zeroed\n");
-    }
-
     // modify kernel entry
     int paging_init_offset = get_symbol_offset_exit(&kallsym, kallsym_kimg, "paging_init");
     setup->paging_init_offset = relo_branch_func(kallsym_kimg, paging_init_offset);
@@ -747,32 +713,6 @@ int unpatch_img(const char *kimg_path, const char *out_path)
     return 0;
 }
 
-int reset_key(const char *kimg_path, const char *out_path, const char *superkey)
-{
-    if (!kimg_path) tools_loge_exit("empty kernel image\n");
-    if (!out_path) tools_loge_exit("empty out image path\n");
-    if (!superkey) tools_loge_exit("empty superkey\n");
-
-    if (strlen(superkey) <= 0) tools_loge_exit("empty superkey\n");
-    if (strlen(superkey) >= SUPER_KEY_LEN) tools_loge_exit("too long superkey\n");
-
-    kernel_file_t kernel_file;
-    read_kernel_file(kimg_path, &kernel_file);
-
-    preset_t *preset = get_preset(kernel_file.kimg, kernel_file.kimg_len);
-    if (!preset) tools_loge_exit("not patched kernel image\n");
-
-    char *origin_key = strdup((char *)preset->setup.superkey);
-    strcpy((char *)preset->setup.superkey, superkey);
-    tools_logi("reset superkey: %s -> %s\n", origin_key, preset->setup.superkey);
-
-    write_kernel_file(&kernel_file, out_path);
-
-    free(origin_key);
-    free_kernel_file(&kernel_file);
-
-    return 0;
-}
 
 int dump_kallsym(const char *kimg_path)
 {

@@ -13,8 +13,6 @@
 #define KP_MAGIC "KP1158"
 #define MAGIC_LEN 0x8
 #define KP_HEADER_SIZE 0x40
-#define SUPER_KEY_LEN 0x40
-#define ROOT_SUPER_KEY_HASH_LEN 0x20
 #define SETUP_PRESERVE_LEN 0x40
 #define HDR_BACKUP_SIZE 0x8
 #define COMPILE_TIME_LEN 0x18
@@ -228,7 +226,6 @@ typedef struct
     int64_t printk_offset;
     map_symbol_t map_symbol;
     uint8_t header_backup[HDR_BACKUP_SIZE];
-    uint8_t superkey[SUPER_KEY_LEN];
     patch_config_t patch_config;
     char additional[ADDITIONAL_LEN];
 } setup_preset_be_000a04_t;
@@ -251,8 +248,6 @@ typedef struct _setup_preset_t
     int64_t printk_offset;
     map_symbol_t map_symbol;
     uint8_t header_backup[HDR_BACKUP_SIZE];
-    uint8_t superkey[SUPER_KEY_LEN];
-    uint8_t root_superkey[ROOT_SUPER_KEY_HASH_LEN];
     int64_t sprintf_offset;
     int64_t symbol_lookup_anchor_offset;
     uint8_t __[SETUP_PRESERVE_LEN - 16];
@@ -275,11 +270,9 @@ typedef struct _setup_preset_t
 #define setup_printk_offset_offset (setup_paging_init_offset_offset + 8)
 #define setup_map_symbol_offset (setup_printk_offset_offset + 8)
 #define setup_header_backup_offset (setup_map_symbol_offset + MAP_SYMBOL_SIZE)
-#define setup_superkey_offset (setup_header_backup_offset + HDR_BACKUP_SIZE)
-#define setup_root_superkey_offset (setup_superkey_offset + SUPER_KEY_LEN)
-#define setup_sprintf_offset_offset (setup_root_superkey_offset + ROOT_SUPER_KEY_HASH_LEN)
+#define setup_sprintf_offset_offset (setup_header_backup_offset + HDR_BACKUP_SIZE)
 #define setup_symbol_lookup_anchor_offset_offset (setup_sprintf_offset_offset + 8)
-#define setup_patch_config_offset (setup_root_superkey_offset + ROOT_SUPER_KEY_HASH_LEN + SETUP_PRESERVE_LEN)
+#define setup_patch_config_offset (setup_symbol_lookup_anchor_offset_offset + 8 + (SETUP_PRESERVE_LEN - 16))
 #define setup_end (setup_patch_config_offset + PATCH_CONFIG_LEN)
 #endif
 
