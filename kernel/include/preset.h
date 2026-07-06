@@ -160,6 +160,7 @@ typedef int32_t extra_item_type;
 #define EXTRA_TYPE_EXEC 3
 #define EXTRA_TYPE_RAW 4
 #define EXTRA_TYPE_ANDROID_RC 5
+#define EXTRA_TYPE_KCONFIG_LEGACY 6
 
 #define EXTRA_TYPE_NONE_STR "none"
 #define EXTRA_TYPE_KPM_STR "kpm"
@@ -167,6 +168,7 @@ typedef int32_t extra_item_type;
 #define EXTRA_TYPE_EXEC_STR "exec"
 #define EXTRA_TYPE_RAW_STR "raw"
 #define EXTRA_TYPE_ANDROID_RC_STR "android_rc"
+#define EXTRA_TYPE_KCONFIG_LEGACY_STR "kconfig"
 
 // todo
 #define EXTRA_EVENT_PAGING_INIT "paging-init"
@@ -184,6 +186,15 @@ typedef int32_t extra_item_type;
 #define EXTRA_EVENT_PRE_SECOND_STAGE "pre-init-second-stage"
 #define EXTRA_EVENT_POST_SECOND_STAGE "post-init-second-stage"
 
+#define PATCH_EXTRA_HEADER_VERSION_LEGACY 0U
+#define PATCH_EXTRA_HEADER_VERSION_MAGIC 0x4B500000U
+#define PATCH_EXTRA_HEADER_VERSION_MASK 0xFFFF0000U
+#define PATCH_EXTRA_HEADER_VERSION_VALUE_MASK 0x0000FFFFU
+#define PATCH_EXTRA_FLAGS_GET_HEADER_VERSION(flags)                                                              \
+    ((((uint32_t)(flags) & PATCH_EXTRA_HEADER_VERSION_MASK) == PATCH_EXTRA_HEADER_VERSION_MAGIC)                \
+         ? ((uint32_t)(flags) & PATCH_EXTRA_HEADER_VERSION_VALUE_MASK)                                          \
+         : PATCH_EXTRA_HEADER_VERSION_LEGACY)
+
 struct _patch_extra_item
 {
     union
@@ -197,6 +208,7 @@ struct _patch_extra_item
             extra_item_type type;
             char name[EXTRA_NAME_LEN];
             char event[EXTRA_EVENT_LEN];
+            int32_t flags;
         };
         char _cap[PATCH_EXTRA_ITEM_LEN];
     };
@@ -250,7 +262,9 @@ typedef struct _setup_preset_t
     uint8_t header_backup[HDR_BACKUP_SIZE];
     int64_t sprintf_offset;
     int64_t symbol_lookup_anchor_offset;
-    uint8_t __[SETUP_PRESERVE_LEN - 16];
+    int64_t kconfig_offset;
+    int64_t kconfig_size;
+    uint8_t __[SETUP_PRESERVE_LEN - 32];
     patch_config_t patch_config;
     char additional[ADDITIONAL_LEN];
 } setup_preset_t;
@@ -272,7 +286,13 @@ typedef struct _setup_preset_t
 #define setup_header_backup_offset (setup_map_symbol_offset + MAP_SYMBOL_SIZE)
 #define setup_sprintf_offset_offset (setup_header_backup_offset + HDR_BACKUP_SIZE)
 #define setup_symbol_lookup_anchor_offset_offset (setup_sprintf_offset_offset + 8)
+<<<<<<< HEAD
 #define setup_patch_config_offset (setup_symbol_lookup_anchor_offset_offset + 8 + (SETUP_PRESERVE_LEN - 16))
+=======
+#define setup_kconfig_offset_offset (setup_symbol_lookup_anchor_offset_offset + 8)
+#define setup_kconfig_size_offset (setup_kconfig_offset_offset + 8)
+#define setup_patch_config_offset (setup_root_superkey_offset + ROOT_SUPER_KEY_HASH_LEN + SETUP_PRESERVE_LEN)
+>>>>>>> main
 #define setup_end (setup_patch_config_offset + PATCH_CONFIG_LEN)
 #endif
 
