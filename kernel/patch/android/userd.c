@@ -1287,20 +1287,20 @@ int load_ap_package_config()
         }
 
         // Apply configuration with safe sctx buffer
-        if (allow) {
-            int rc = su_add_allow_uid(uid, to_uid, sctx_buf);
-            if (rc == 0) {
-                loaded_count++;
-            } else {
-                log_boot("package_config: line %d failed to add allow rule: %d\n", line_num, rc);
-                valid_line = 0;
-            }
-        }
+        // if (allow) {
+        //     int rc = su_add_allow_uid(uid, to_uid, sctx_buf);
+        //     if (rc == 0) {
+        //         loaded_count++;
+        //     } else {
+        //         log_boot("package_config: line %d failed to add allow rule: %d\n", line_num, rc);
+        //         valid_line = 0;
+        //     }
+        // }
 
         // Set exclude flag
-        if (exclude) {
-            set_ap_mod_exclude(uid, exclude);
-        }
+        // if (exclude) {
+        //     set_ap_mod_exclude(uid, exclude);
+        // }
 
 next_line:
         if (!valid_line) {
@@ -1365,11 +1365,11 @@ static void handle_before_execve(hook_local_t *hook_local, char **__user u_filen
     hook_local->data2 = 0;
 
     // Check if current process is trusted manager, set auto-su flag
-    if (is_trusted_manager_uid(current_uid())) {
-        hook_local->data0 = 1;
-    } else {
-        hook_local->data0 = 0;
-    }
+    // if (is_trusted_manager_uid(current_uid())) {
+    //     hook_local->data0 = 1;
+    // } else {
+    //     hook_local->data0 = 0;
+    // }
 
     static char app_process[] = "/system/bin/app_process";
     static char app_process64[] = "/system/bin/app_process64";
