@@ -286,13 +286,9 @@ typedef struct _setup_preset_t
 #define setup_header_backup_offset (setup_map_symbol_offset + MAP_SYMBOL_SIZE)
 #define setup_sprintf_offset_offset (setup_header_backup_offset + HDR_BACKUP_SIZE)
 #define setup_symbol_lookup_anchor_offset_offset (setup_sprintf_offset_offset + 8)
-<<<<<<< HEAD
-#define setup_patch_config_offset (setup_symbol_lookup_anchor_offset_offset + 8 + (SETUP_PRESERVE_LEN - 16))
-=======
 #define setup_kconfig_offset_offset (setup_symbol_lookup_anchor_offset_offset + 8)
 #define setup_kconfig_size_offset (setup_kconfig_offset_offset + 8)
-#define setup_patch_config_offset (setup_root_superkey_offset + ROOT_SUPER_KEY_HASH_LEN + SETUP_PRESERVE_LEN)
->>>>>>> main
+#define setup_patch_config_offset (setup_kconfig_size_offset + 8 + SETUP_PRESERVE_LEN)
 #define setup_end (setup_patch_config_offset + PATCH_CONFIG_LEN)
 #endif
 
